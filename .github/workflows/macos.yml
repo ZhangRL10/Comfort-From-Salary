@@ -38,7 +38,7 @@ jobs:
           ditto -x -k dist/*-mac-"$ARCH".zip "$RUNNER_TEMP/cfs-smoke"
           app="$RUNNER_TEMP/cfs-smoke/Comfort-From-Salary.app"
           binary="$app/Contents/MacOS/Comfort-From-Salary"
-          lipo -verify_arch "$MACHO" "$binary"
+          test "$(lipo -archs "$binary")" = "$MACHO"
           codesign --verify --deep --strict "$app"
           log="$RUNNER_TEMP/cfs-electron.log"
           "$binary" --remote-debugging-port=9222 --user-data-dir="$RUNNER_TEMP/cfs-profile" >"$log" 2>&1 &

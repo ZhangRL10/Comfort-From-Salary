@@ -42,7 +42,7 @@ jobs:
           codesign --verify --deep --strict "$app"
           entitlements="$RUNNER_TEMP/cfs-entitlements.plist"
           for process in "$app" "$app"/Contents/Frameworks/*.app; do
-            codesign -d --entitlements - "$process" >"$entitlements"
+            codesign -d --entitlements - --xml "$process" >"$entitlements"
             test "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.cs.disable-library-validation' "$entitlements")" = true
             test "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.cs.allow-jit' "$entitlements")" = true
           done

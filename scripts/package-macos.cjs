@@ -25,7 +25,19 @@ async function build() {
       platform: 'darwin',
       arch,
       overwrite: true,
-      osxSign: { identity: '-', identityValidation: false, preAutoEntitlements: false, continueOnError: false },
+      osxSign: {
+        identity: '-',
+        identityValidation: false,
+        preAutoEntitlements: false,
+        continueOnError: false,
+        optionsForFile: file => path.extname(file) === '.app' ? {
+          // Ad hoc signatures have no Team ID to match against Electron Framework.
+          entitlements: [
+            'com.apple.security.cs.allow-jit',
+            'com.apple.security.cs.disable-library-validation',
+          ],
+        } : {},
+      },
     });
     const bundle = path.join(destination, productName + '.app');
     const zip = path.join(output, `${productName}-${version}-mac-${arch}.zip`);

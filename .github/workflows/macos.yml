@@ -30,7 +30,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run package:mac
-      - name: Verify and launch the packaged app
+      - name: Verify and open the packaged app with Launch Services
         env:
           ARCH: ${{ matrix.arch }}
           MACHO: ${{ matrix.macho }}
@@ -40,12 +40,16 @@ jobs:
           binary="$app/Contents/MacOS/Comfort-From-Salary"
           test "$(lipo -archs "$binary")" = "$MACHO"
           codesign --verify --deep --strict "$app"
+          entitlements="$RUNNER_TEMP/cfs-entitlements.plist"
+          for process in "$app" "$app"/Contents/Frameworks/*.app; do
+            codesign -d --entitlements - "$process" >"$entitlements"
+            test "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.cs.disable-library-validation' "$entitlements")" = true
+            test "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.cs.allow-jit' "$entitlements")" = true
+          done
           log="$RUNNER_TEMP/cfs-electron.log"
-          "$binary" --remote-debugging-port=9222 --user-data-dir="$RUNNER_TEMP/cfs-profile" >"$log" 2>&1 &
-          pid=$!
-          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          open -na "$app" --args --remote-debugging-port=9222 --user-data-dir="$RUNNER_TEMP/cfs-profile" \
+            --enable-logging=file --log-file="$log"
           for attempt in {1..30}; do
-            if ! kill -0 "$pid" 2>/dev/null; then break; fi
             if curl -fs http://127.0.0.1:9222/json/list | jq -e '
               map(select(.type == "page") | .url) |
               index("cfs://app/index.html?desktop=main") != null and
@@ -53,7 +57,7 @@ jobs:
             ' >/dev/null; then exit 0; fi
             sleep 1
           done
-          cat "$log"
+          if [[ -f "$log" ]]; then cat "$log"; fi
           exit 1
       - uses: actions/upload-artifact@v7
         with:

@@ -1,0 +1,66 @@
+name: macOS desktop
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+            macho: arm64
+          - runner: macos-15-intel
+            arch: x64
+            macho: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run package:mac
+      - name: Verify and open the packaged app with Launch Services
+        env:
+          ARCH: ${{ matrix.arch }}
+          MACHO: ${{ matrix.macho }}
+        run: |
+          ditto -x -k dist/*-mac-"$ARCH".zip "$RUNNER_TEMP/cfs-smoke"
+          app="$RUNNER_TEMP/cfs-smoke/Comfort-From-Salary.app"
+          binary="$app/Contents/MacOS/Comfort-From-Salary"
+          test "$(lipo -archs "$binary")" = "$MACHO"
+          codesign --verify --deep --strict "$app"
+          entitlements="$RUNNER_TEMP/cfs-entitlements.plist"
+          for process in "$app" "$app"/Contents/Frameworks/*.app; do
+            codesign -d --entitlements - --xml "$process" >"$entitlements"
+            test "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.cs.disable-library-validation' "$entitlements")" = true
+            test "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.cs.allow-jit' "$entitlements")" = true
+          done
+          log="$RUNNER_TEMP/cfs-electron.log"
+          open -na "$app" --args --remote-debugging-port=9222 --user-data-dir="$RUNNER_TEMP/cfs-profile" \
+            --enable-logging=file --log-file="$log"
+          for attempt in {1..30}; do
+            if curl -fs http://127.0.0.1:9222/json/list | jq -e '
+              map(select(.type == "page") | .url) |
+              index("cfs://app/index.html?desktop=main") != null and
+              index("cfs://app/index.html?desktop=pet") != null
+            ' >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          if [[ -f "$log" ]]; then cat "$log"; fi
+          exit 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Comfort-From-Salary-mac-${{ matrix.arch }}
+          path: dist/*-mac-${{ matrix.arch }}.zip
+          if-no-files-found: error

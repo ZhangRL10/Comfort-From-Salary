@@ -2,6 +2,8 @@ const { app, BrowserWindow, Menu, Tray, nativeImage, net, protocol, screen, sess
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
+const isMac = process.platform === 'darwin';
+const hideLabel = isMac ? '隐藏到菜单栏' : '隐藏到托盘';
 const root = path.join(__dirname, '..', 'prototype');
 const origin = 'cfs://app';
 const preload = path.join(__dirname, 'preload.cjs');
@@ -14,7 +16,7 @@ const petHeight = 212;
 const petInset = 8;
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'cfs', privileges: { standard: true, secure: true } }]);
-app.setAppUserModelId('ComfortFromSalary.Desktop');
+if (process.platform === 'win32') app.setAppUserModelId('ComfortFromSalary.Desktop');
 
 function petSize() {
   return { width: Math.ceil(274 * scale / 100), height: Math.ceil(424 * scale / 100) };
@@ -181,7 +183,7 @@ function openPetMenu(state) {
   });
   template.push(
     { type: 'separator' },
-    { label: '隐藏到托盘', click: hide },
+    { label: hideLabel, click: hide },
     { label: '退出', click: () => app.quit() },
   );
   Menu.buildFromTemplate(template).popup({ window: pet });
@@ -256,7 +258,10 @@ async function start() {
   });
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_details, callback) => callback({ cancel: true }));
-  Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(isMac ? Menu.buildFromTemplate([
+    { role: 'appMenu' },
+    { role: 'editMenu' },
+  ]) : null);
   registerControls();
 
   const area = screen.getPrimaryDisplay().workArea;
@@ -270,7 +275,7 @@ async function start() {
     x: area.x + area.width - size.width - 24,
     y: area.y + area.height - size.height - 20,
     transparent: true, resizable: false, maximizable: false, skipTaskbar: true,
-    hasShadow: false, alwaysOnTop: pinned,
+    hasShadow: false, alwaysOnTop: pinned, acceptFirstMouse: isMac,
   });
   pet.on('show', () => pet.webContents.send('cfs:control', 'visibility', true));
   pet.on('hide', () => {
@@ -278,14 +283,14 @@ async function start() {
     pet.webContents.send('cfs:control', 'visibility', false);
   });
   const icon = nativeImage.createFromPath(path.join(__dirname, 'tray.png'));
-  tray = new Tray(icon);
+  tray = new Tray(isMac ? icon.resize({ width: 18, height: 18 }) : icon);
   tray.setToolTip('Comfort-From-Salary');
-  tray.on('click', () => show());
+  if (!isMac) tray.on('click', () => show());
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开完整窗口', click: () => show('overview') },
     { label: '显示桌宠', click: () => show('pet') },
     { label: '重置桌宠位置', click: () => { resetPetPosition(); show('pet'); } },
-    { label: '隐藏到托盘', click: hide },
+    { label: hideLabel, click: hide },
     { type: 'separator' },
     { label: '退出', click: () => app.quit() },
   ]));
@@ -295,6 +300,7 @@ async function start() {
     pet.loadURL(origin + '/index.html?desktop=pet'),
   ]);
   show('overview');
+  if (isMac) app.on('activate', () => { if (!quitting) show(); });
   screen.on('display-removed', keepPetOnScreen);
   screen.on('display-metrics-changed', keepPetOnScreen);
   const pointerTimer = setInterval(updateMouseTarget, 32);

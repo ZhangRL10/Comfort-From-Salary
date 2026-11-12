@@ -84,7 +84,7 @@ const screenshot = (page, name) => page.screenshot({ path: path.join(artifacts, 
     await page.locator('#pet-character').dblclick();
     await page.getByRole('button', { name: '薪资与作息', exact: true }).first().click();
     await screenshot(page, 'settings');
-    assert.ok(await page.locator('button[type=submit]').evaluate(el => el.getBoundingClientRect().bottom <= document.querySelector('.page-content').getBoundingClientRect().bottom), 'Settings save action must stay visible');
+    assert.ok(await page.locator('#settings-form button[type=submit]').evaluate(el => el.getBoundingClientRect().bottom <= document.querySelector('.page-content').getBoundingClientRect().bottom), 'Settings save action must stay visible');
     for (const input of await page.locator('#weekday-picker input').all()) await input.uncheck();
     await page.getByRole('button', { name: '保存设置', exact: true }).click();
     assert.match(await page.locator('#form-error').textContent(), /至少/);

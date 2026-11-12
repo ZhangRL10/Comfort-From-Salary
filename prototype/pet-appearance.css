@@ -1,0 +1,106 @@
+.appearance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  align-items: start;
+  gap: 20px;
+}
+.appearance-preview {
+  display: grid;
+  place-items: center;
+  min-height: 235px;
+  padding: 24px 12px 12px;
+  border: 1px solid color-mix(in srgb, var(--preview-tint) 24%, white);
+  border-radius: 12px;
+  background: repeating-conic-gradient(
+    color-mix(in srgb, var(--preview-tint) 12%, white) 0 25%,
+    color-mix(in srgb, var(--preview-tint) 5%, white) 0 50%
+  ) 0 0 / 24px 24px;
+}
+.appearance-default {
+  width: min(190px, 100%);
+  aspect-ratio: 1;
+  background: url('./assets/yueya/rest/rest-sheet-v2.png') left top / 400% 400% no-repeat;
+}
+.appearance-character {
+  display: block;
+  width: min(162px, 100%);
+  height: 162px;
+  object-fit: contain;
+  object-position: center bottom;
+  transform-origin: center bottom;
+  pointer-events: none;
+}
+.pet-character:has(#custom-pet:not([hidden])) { display: grid; place-items: end center; padding-bottom: 3px; }
+.appearance-options { display: grid; gap: 11px; }
+.appearance-file-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); }
+.appearance-field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.appearance-field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 9px;
+  color: var(--ink);
+  background: var(--paper);
+}
+.appearance-options .field-help { margin: 0; color: var(--muted); }
+.appearance-motions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+#appearance-play { justify-self: start; }
+.appearance-theme {
+  display: grid;
+  gap: 7px;
+  border-top: 1px solid var(--line);
+  padding-top: 11px;
+}
+.appearance-theme .check-label, .appearance-color-row { color: var(--muted); }
+.appearance-color-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
+#appearance-color { width: 38px; height: 30px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); padding: 3px; cursor: pointer; }
+.appearance-error { margin-top: 12px; color: #9f3747; font-size: 12px; }
+.appearance-footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 14px;
+}
+
+:root[data-pet-theme] {
+  --accent: color-mix(in srgb, var(--pet-tint) 44%, black);
+  --primary: var(--accent);
+  --primary-hover: color-mix(in srgb, var(--primary) 86%, black);
+  --muted: color-mix(in srgb, var(--pet-tint) 38%, #3a3c45);
+  --accent-soft: color-mix(in srgb, var(--pet-tint) 12%, white);
+  --surface: color-mix(in srgb, var(--pet-tint) 5%, white);
+  --sidebar: color-mix(in srgb, var(--pet-tint) 8%, white);
+  --line: color-mix(in srgb, var(--pet-tint) 22%, white);
+  --line-strong: color-mix(in srgb, var(--pet-tint) 37%, white);
+  --selected: color-mix(in srgb, var(--pet-tint) 17%, white);
+  --focus: var(--accent);
+}
+[data-pet-theme] .income-card { background: linear-gradient(115deg, var(--accent-soft), var(--surface)); }
+[data-pet-theme] .income-card::after { border-color: var(--line); box-shadow: 0 0 0 20px var(--sidebar), 0 0 0 40px var(--surface); }
+[data-pet-theme] :is(.hero-amount, .rate-second strong, .nav-item.active, .brand-mark, .text-button, .pet-earnings strong, .pet-tooltip strong) { color: var(--accent); }
+[data-pet-theme] :is(.metric-label, .estimate, .income-main p, .month-income>span:last-child, .progress-label, .salary-item>span, .salary-item small, .pet-state-label, .pet-earnings>span, .pet-tooltip>div, .pet-tooltip .tooltip-heading, .context-menu>button, .pet-size-control) { color: var(--muted); }
+[data-pet-theme] :is(.nav-item:not(.active), .titlebar-brand, .icon-button, .secondary-button, .pet-entry) { color: var(--muted); }
+[data-pet-theme] :is(.salary-item, .context-menu, .pet-entry) { background: var(--surface); }
+[data-pet-theme] :is(.brand-mark, .nav-item:hover, .pet-entry:hover, .secondary-button:hover, .salary-item.rate-second, .context-menu>button:hover) { background: var(--accent-soft); }
+[data-pet-theme] .close-button:hover { color: white; }
+[data-pet-theme] :is(.month-income, .estimate, .salary-item, .salary-item.rate-second, .pet-earnings, .pet-earnings::after, .pet-tooltip, .pet-tooltip .tooltip-heading, .context-menu, .context-menu hr) { border-color: var(--line); }
+[data-pet-theme] .progress-track { background: var(--line); }
+[data-pet-theme] :is(.progress-track>div, .local-dot, .live-dot) { background: var(--pet-tint); }
+[data-pet-theme] :is(input[type=checkbox], input[type=range]) { accent-color: var(--primary); }
+[data-pet-theme] .toast { background: var(--primary); }
+
+@media (max-width: 360px) {
+  .nav-item[data-page=appearance] { padding-inline: 7px; }
+  .nav-item[data-page=appearance]>svg { display: none; }
+}

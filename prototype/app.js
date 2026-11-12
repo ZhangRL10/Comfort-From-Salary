@@ -5,11 +5,15 @@
   const desktop = window.cfsDesktop;
   const desktopMode = desktop && new URLSearchParams(location.search).get('desktop');
   const desktopPet = desktopMode === 'pet';
+  const petAppearance = window.CFSPetAppearance;
+  let appearance = petAppearance.load();
+  petAppearance.applyTheme(appearance);
   if (desktop) {
     document.documentElement.dataset.desktop = desktopMode || 'main';
     document.title = 'Comfort-From-Salary';
   }
   if (desktopMode === 'size') {
+    petAppearance.watchSaved(petAppearance.applyTheme);
     const slider = $('pet-size');
     const menu = $('context-menu');
     const close = () => desktop.command('close-size');
@@ -51,6 +55,12 @@
   let demoBase = new Date(2026, 10, 6, 10, 32, 0), demoStarted = Date.now(), toastTimer;
   let storageAvailable = true;
   let draftAdjustments = {}, selectedDateKey = '', calendarMonthKey = '';
+  const customPet = petAppearance.createPlayer($('custom-pet'), true);
+  const editAppearance = desktopPet ? () => {} : petAppearance.createEditor(saved => {
+    applyAppearance(saved);
+    toast('桌宠外观已保存');
+  });
+  petAppearance.watchSaved(applyAppearance);
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
     if (saved && !core.validate(saved.settings)) settings = saved.settings;
@@ -97,6 +107,14 @@
     if ((previewState === 'lunch' && !settings.lunchEnabled) || (previewState === 'rest' && settings.weekdays.length === 7) || (previewState === 'before' && start === '00:00')) previewState = 'working';
     $('preview-state').value = previewState;
   }
+  function applyAppearance(saved) {
+    appearance = saved;
+    petAppearance.applyTheme(appearance);
+    render();
+  }
+  function canPlayCustomAction() {
+    return appearance.image && appearance.action !== 'off' && $('pet-wrap').dataset.state !== 'leave';
+  }
   function render() {
     const current = now(), r = core.calculate(settings, current);
     $('demo-clock').textContent = `${previewState === 'live' ? '本机时间' : '演示时间'} · ${dateText(current)} ${pad(current.getHours())}:${pad(current.getMinutes())}:${pad(current.getSeconds())}`;
@@ -132,11 +150,14 @@
     $('pet-state-label').textContent = statusNames[r.status];
     $('pet-wrap').dataset.state = r.status;
     $('pet-wrap').dataset.growing = String(r.growing);
-    const showLeave = r.status === 'leave';
+    const hasCustom = Boolean(appearance.image);
+    customPet.update(appearance, view === 'pet' && !document.hidden, r.status !== 'leave');
+    $('menu-custom').hidden = !canPlayCustomAction();
+    const showLeave = !hasCustom && r.status === 'leave';
     $('leave-sticker').hidden = !showLeave;
-    let hasYueya = showLeave;
+    let hasYueya = hasCustom || showLeave;
     for (const { state, sprite, menu, player } of animations) {
-      const show = r.status === state && player.loaded;
+      const show = !hasCustom && r.status === state && player.loaded;
       sprite.hidden = menu.hidden = !show;
       player.setActive(show && view === 'pet' && !document.hidden);
       hasYueya ||= show;
@@ -153,6 +174,8 @@
     if (next === 'settings') resetForm();
     $('overview-page').hidden = next !== 'overview';
     $('settings-page').hidden = next !== 'settings';
+    $('appearance-page').hidden = next !== 'appearance';
+    editAppearance(next === 'appearance');
     document.querySelectorAll('.nav-item').forEach(button => { button.classList.toggle('active', button.dataset.page === next); if (button.dataset.page === next) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current'); });
     document.querySelector('.page-content').scrollTop = 0;
   }
@@ -179,12 +202,13 @@
       chooseDemo('live'); refreshDemoOptions(); render();
       return;
     }
-    if (desktop && ['pet', 'pin', 'overview', 'settings', 'hide'].includes(action)) {
+    if (desktop && ['pet', 'pin', 'overview', 'settings', 'appearance', 'hide'].includes(action)) {
       desktop.command(action);
       return;
     }
     const animation = animations.find(item => item.action === action);
     if (animation && !animation.player.playAction()) toast('当前启用了减少动态效果，保留静态姿势。');
+    if (action === 'custom-action' && canPlayCustomAction() && !customPet.play()) toast('当前启用了减少动态效果，保留静态姿势。');
     if (action === 'pin') {
       pinned = !pinned;
       document.querySelectorAll('.pin-button').forEach(button => button.setAttribute('aria-pressed', String(pinned)));
@@ -192,7 +216,7 @@
       toast(pinned ? '置顶已开启（原型内模拟）' : '置顶已关闭（原型内模拟）');
     }
     if (action === 'pet') { previousView = 'pet'; setView('pet'); }
-    if (action === 'overview' || action === 'settings') { setView('window'); setPage(action); }
+    if (['overview', 'settings', 'appearance'].includes(action)) { setView('window'); setPage(action); }
     if (action === 'hide') { if (page === 'settings') setPage('overview'); previousView = view === 'pet' ? 'pet' : 'window'; setView('hidden'); }
     if (action === 'exit') { setPage('overview'); previousView = 'window'; setView('exited'); }
     if (action !== 'pin') closeMenu(false);
@@ -325,7 +349,7 @@
   function openMenu(x, y) {
     dismissPetTooltip();
     if (desktopPet) {
-      desktop.menu($('pet-wrap').dataset.state);
+      desktop.menu(appearance.image ? (canPlayCustomAction() ? 'custom' : 'leave') : $('pet-wrap').dataset.state);
       return;
     }
     $('context-menu').hidden = false;
@@ -528,6 +552,6 @@
     }
   }
   setInterval(render, 250);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  document.addEventListener('visibilitychange', render);
   if (!storageAvailable) toast('当前浏览器未允许本地保存，仍可体验本次原型。');
 })();

@@ -149,6 +149,7 @@ const actionTitles = {
   lunch: ['播放吃饭小动作', 'lunch-animation'],
   after: ['播放翻身小动作', 'after-animation'],
   rest: ['播放落日合影', 'rest-animation'],
+  custom: ['播放自定义小动作', 'custom-action'],
 };
 
 async function showSizePanel() {
@@ -174,10 +175,11 @@ function openPetMenu(state) {
   const template = [
     { label: '打开完整窗口', click: () => show('overview') },
     { label: '薪资与作息', click: () => show('settings') },
+    { label: '桌宠外观', click: () => show('appearance') },
     { label: '置顶桌宠', type: 'checkbox', checked: pinned, click: () => togglePin(pet) },
     { label: '调整桌宠大小…', click: () => showSizePanel().catch(console.error) },
   ];
-  if (action) template.splice(2, 0, {
+  if (action) template.splice(3, 0, {
     label: action[0],
     click: () => pet.webContents.send('cfs:control', 'play', action[1]),
   });
@@ -198,7 +200,7 @@ function registerControls() {
       return;
     }
     if (source !== main && source !== pet) return;
-    if (action === 'overview' || action === 'settings' || action === 'pet') show(action);
+    if (['overview', 'settings', 'appearance', 'pet'].includes(action)) show(action);
     if (action === 'pin') togglePin(source);
     if (action === 'hide') hide();
   });
@@ -288,6 +290,7 @@ async function start() {
   if (!isMac) tray.on('click', () => show());
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开完整窗口', click: () => show('overview') },
+    { label: '桌宠外观', click: () => show('appearance') },
     { label: '显示桌宠', click: () => show('pet') },
     { label: '重置桌宠位置', click: () => { resetPetPosition(); show('pet'); } },
     { label: hideLabel, click: hide },

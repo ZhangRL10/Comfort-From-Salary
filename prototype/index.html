@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./pet-animation.css">
   <link rel="stylesheet" href="./theme.css">
   <link rel="stylesheet" href="./desktop.css">
+  <link rel="stylesheet" href="./pet-appearance.css">
   <script defer src="./core.js"></script>
   <script defer src="./yueya-assets.js"></script>
   <script defer src="./yueya-working-assets.js"></script>
@@ -18,6 +19,7 @@
   <script defer src="./yueya-after-assets.js"></script>
   <script defer src="./yueya-rest-assets.js"></script>
   <script defer src="./pet-animation.js"></script>
+  <script defer src="./pet-appearance.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
@@ -43,7 +45,14 @@
     <section class="app-window" id="app-window" aria-label="Comfort-From-Salary 主窗口">
       <header class="titlebar" id="window-drag"><span class="titlebar-brand"><span class="brand-mark small"><svg><use href="#i-leaf"/></svg></span>Comfort-From-Salary <button class="text-button desktop-date-return" id="desktop-date-return" data-action="live" hidden>日期预览 · 返回本机时间</button></span><div class="window-controls"><button class="icon-button pin-button" data-action="pin" aria-label="窗口置顶" aria-pressed="false"><svg><use href="#i-pin"/></svg></button><button class="icon-button" data-action="pet" aria-label="切换桌宠"><svg><use href="#i-pet"/></svg></button><button class="icon-button" data-action="hide" aria-label="隐藏到托盘"><svg><use href="#i-minus"/></svg></button><button class="icon-button close-button" data-action="hide" aria-label="关闭窗口并隐藏到托盘"><svg><use href="#i-close"/></svg></button></div></header>
       <div class="window-body">
-        <aside class="sidebar"><div class="sidebar-brand"><span class="brand-mark"><svg><use href="#i-leaf"/></svg></span><strong>Comfort<span>From Salary</span></strong></div><nav aria-label="主导航"><button class="nav-item active" data-page="overview" aria-label="收入概览"><svg><use href="#i-home"/></svg><span>收入概览</span></button><button class="nav-item" data-page="settings" aria-label="薪资与作息"><svg><use href="#i-settings"/></svg><span>薪资与作息</span></button></nav><button class="pet-entry" data-action="pet" aria-label="切换为桌宠"><svg><use href="#i-pet"/></svg><span>让桌宠陪着你</span><svg><use href="#i-arrow"/></svg></button><div class="sidebar-bottom"><span class="local-dot"></span>本地保存 · 无需联网</div></aside>
+        <aside class="sidebar"><div class="sidebar-brand"><span class="brand-mark"><svg><use href="#i-leaf"/></svg></span><strong>Comfort<span>From Salary</span></strong></div>
+          <nav aria-label="主导航">
+            <button class="nav-item active" data-page="overview" aria-label="收入概览"><svg><use href="#i-home"/></svg><span>收入概览</span></button>
+            <button class="nav-item" data-page="settings" aria-label="薪资与作息"><svg><use href="#i-settings"/></svg><span>薪资与作息</span></button>
+            <button class="nav-item" data-page="appearance" aria-label="桌宠外观"><svg><use href="#i-pet"/></svg><span>桌宠外观</span></button>
+          </nav>
+          <button class="pet-entry" data-action="pet" aria-label="切换为桌宠"><svg><use href="#i-pet"/></svg><span>让桌宠陪着你</span><svg><use href="#i-arrow"/></svg></button><div class="sidebar-bottom"><span class="local-dot"></span>本地保存 · 无需联网</div>
+        </aside>
         <div class="page-content">
           <section id="overview-page" class="page">
             <div class="page-heading"><div><p class="eyebrow" id="date-label"></p><h2>每一份付出，都在积累。</h2></div><span class="status-badge" id="main-status"><span></span><b>计薪中</b></span></div>
@@ -79,6 +88,39 @@
               <div class="settings-save"><p id="form-error" role="alert" hidden></p><p class="save-note" id="settings-summary">保存后，本日和本月估算将按新设置重新计算。</p><div><button class="secondary-button" type="button" id="cancel-settings">取消</button><button class="primary-button" type="submit"><svg><use href="#i-check"/></svg>保存设置</button></div></div>
             </form>
           </section>
+          <section id="appearance-page" class="page" hidden>
+            <div class="page-heading"><h2>桌宠外观</h2></div>
+            <form id="appearance-form">
+              <div class="appearance-grid">
+                <div class="appearance-preview" id="appearance-preview">
+                  <span class="appearance-default" id="appearance-default" role="img" aria-label="默认桌宠月芽"></span>
+                  <img class="appearance-character" id="appearance-image" alt="自定义桌宠预览" draggable="false" hidden>
+                </div>
+                <div class="appearance-options">
+                  <div class="appearance-file-row">
+                    <button class="secondary-button" type="button" id="appearance-pick" aria-describedby="appearance-file-help">选择角色图片</button>
+                    <input type="file" id="appearance-file" accept="image/png,image/webp,image/jpeg" hidden>
+                    <span id="appearance-file-status" role="status"></span>
+                  </div>
+                  <p id="appearance-file-help" class="field-help">支持不超过 12 MB 的 PNG、WebP 或 JPG。透明背景效果更自然，有背景的图片会保留原背景。</p>
+                  <div class="appearance-motions">
+                    <label class="appearance-field">常驻动作<select id="appearance-idle"><option value="breathe">呼吸</option><option value="sway">轻晃</option><option value="still">静止</option></select></label>
+                    <label class="appearance-field">偶发动作<select id="appearance-action"><option value="jump">弹跳</option><option value="off">关闭</option></select></label>
+                  </div>
+                  <button class="secondary-button" type="button" id="appearance-play">试播偶发动作</button>
+                  <div class="appearance-theme">
+                    <label class="check-label"><input type="checkbox" id="appearance-themed">应用主题色</label>
+                    <div class="appearance-color-row"><label for="appearance-color">主题色</label><input type="color" id="appearance-color" value="#3e79a5"><button class="text-button" type="button" id="appearance-recommend">使用推荐色</button></div>
+                  </div>
+                </div>
+              </div>
+              <p class="appearance-error" id="appearance-error" role="alert" hidden></p>
+              <div class="appearance-footer">
+                <button class="secondary-button" type="button" id="appearance-reset">恢复默认桌宠</button>
+                <button class="primary-button" type="submit" id="appearance-save"><svg><use href="#i-check"/></svg>保存外观</button>
+              </div>
+            </form>
+          </section>
         </div>
       </div>
       <div class="resize-grip" id="window-resize" aria-hidden="true"></div>
@@ -87,6 +129,7 @@
       <div class="pet-earnings" id="pet-earnings"><span>本日已赚</span><strong id="pet-today">¥0.00</strong></div>
       <div class="pet-tooltip" id="pet-tooltip" role="tooltip"><div class="tooltip-heading"><span class="local-dot"></span>努力的每一刻，都算数。</div><div><span>本日已赚</span><strong id="hover-today">¥0.00</strong></div><div><span>本月已赚</span><strong id="hover-month">¥0.00</strong></div></div>
       <button class="pet-character" id="pet-character" aria-label="桌宠，双击打开完整窗口，右键打开菜单" aria-describedby="pet-tooltip">
+        <img class="appearance-character" id="custom-pet" alt="" draggable="false" hidden>
         <span class="yueya-sprite" id="leave-sticker" hidden role="img" aria-label="写着查无此人的木牌，右下角有眨眼的月芽"></span>
         <span class="yueya-sprite" id="rest-sprite" hidden role="img" aria-label="月芽戴着墨镜，开心地拿着相机"></span>
         <span class="yueya-sprite" id="after-sprite" hidden role="img" aria-label="月芽下班后无精打采地横躺在沙发上"></span>
@@ -102,7 +145,7 @@
     </div>
     <div class="desktop-hint" id="desktop-hint" hidden><span class="hint-dot"></span>拖动桌宠换个位置 · 双击打开窗口 · 右键查看更多</div>
     <div class="empty-state" id="empty-state" hidden><span class="brand-mark"><svg><use href="#i-leaf"/></svg></span><h2 id="empty-title">已藏进托盘</h2><p id="empty-copy">点击底部的 Comfort 图标，随时回来。</p><button class="primary-button" id="relaunch">重新打开</button></div>
-    <div class="context-menu" id="context-menu" role="menu" hidden><button role="menuitem" data-action="overview"><svg><use href="#i-home"/></svg>打开完整窗口</button><button role="menuitem" data-action="settings"><svg><use href="#i-settings"/></svg>薪资与作息</button><button role="menuitem" data-action="commute" id="menu-commute" hidden><svg><use href="#i-pet"/></svg>播放通勤小动作</button><button role="menuitem" data-action="working-animation" id="menu-working" hidden><svg><use href="#i-pet"/></svg>播放砸桌小动作</button><button role="menuitem" data-action="lunch-animation" id="menu-lunch" hidden><svg><use href="#i-pet"/></svg>播放吃饭小动作</button><button role="menuitem" data-action="after-animation" id="menu-after" hidden><svg><use href="#i-pet"/></svg>播放翻身小动作</button><button role="menuitem" data-action="rest-animation" id="menu-rest" hidden><svg><use href="#i-pet"/></svg>播放落日合影</button><button role="menuitemcheckbox" data-action="pin" aria-checked="false" id="menu-pin"><svg><use href="#i-pin"/></svg><span>窗口置顶</span></button><button id="size-panel-close" type="button" aria-label="关闭大小调节" hidden><svg><use href="#i-close"/></svg></button><label class="pet-size-control">桌宠大小<input type="range" id="pet-size" min="50" max="125" step="1" value="100" aria-label="桌宠大小"><output id="pet-size-value">100%</output></label><hr><button role="menuitem" data-action="hide"><svg><use href="#i-minus"/></svg>隐藏到托盘</button><button role="menuitem" data-action="exit"><svg><use href="#i-power"/></svg>退出软件</button></div>
+    <div class="context-menu" id="context-menu" role="menu" hidden><button role="menuitem" data-action="overview"><svg><use href="#i-home"/></svg>打开完整窗口</button><button role="menuitem" data-action="settings"><svg><use href="#i-settings"/></svg>薪资与作息</button><button role="menuitem" data-action="appearance"><svg><use href="#i-pet"/></svg>桌宠外观</button><button role="menuitem" data-action="custom-action" id="menu-custom" hidden><svg><use href="#i-pet"/></svg>播放自定义小动作</button><button role="menuitem" data-action="commute" id="menu-commute" hidden><svg><use href="#i-pet"/></svg>播放通勤小动作</button><button role="menuitem" data-action="working-animation" id="menu-working" hidden><svg><use href="#i-pet"/></svg>播放砸桌小动作</button><button role="menuitem" data-action="lunch-animation" id="menu-lunch" hidden><svg><use href="#i-pet"/></svg>播放吃饭小动作</button><button role="menuitem" data-action="after-animation" id="menu-after" hidden><svg><use href="#i-pet"/></svg>播放翻身小动作</button><button role="menuitem" data-action="rest-animation" id="menu-rest" hidden><svg><use href="#i-pet"/></svg>播放落日合影</button><button role="menuitemcheckbox" data-action="pin" aria-checked="false" id="menu-pin"><svg><use href="#i-pin"/></svg><span>窗口置顶</span></button><button id="size-panel-close" type="button" aria-label="关闭大小调节" hidden><svg><use href="#i-close"/></svg></button><label class="pet-size-control">桌宠大小<input type="range" id="pet-size" min="50" max="125" step="1" value="100" aria-label="桌宠大小"><output id="pet-size-value">100%</output></label><hr><button role="menuitem" data-action="hide"><svg><use href="#i-minus"/></svg>隐藏到托盘</button><button role="menuitem" data-action="exit"><svg><use href="#i-power"/></svg>退出软件</button></div>
     <footer class="taskbar"><span class="desktop-caption">桌面预览</span><div class="taskbar-center"><button class="tray-app" id="tray-app" aria-label="Comfort 托盘图标，点击恢复，右键打开菜单"><span class="brand-mark small"><svg><use href="#i-leaf"/></svg></span><span>Comfort</span><i></i></button></div><time id="tray-clock"></time></footer>
     <div class="toast" id="toast" role="status" hidden></div>
   </main>
